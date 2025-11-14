@@ -1,0 +1,193 @@
+╔════════════════════════════════════════════════════════════════════════╗
+║                 PLAKA OKUMA SİSTEMİ - KULLANIM KILAVUZU                ║
+╚════════════════════════════════════════════════════════════════════════╝
+
+📋 İÇİNDEKİLER
+─────────────────────────────────────────────────────────────────────────
+1. İlk Kurulum
+2. Normal Kullanım
+3. Sorun Giderme
+4. Özellikler
+
+
+════════════════════════════════════════════════════════════════════════
+1️⃣  İLK KURULUM (Sadece ilk kez)
+════════════════════════════════════════════════════════════════════════
+
+Adım 1: SETUP_AND_START.bat dosyasını çift tıklayın
+        ↓
+        Bu dosya:
+        ✅ Python ve Node.js gereksinimlerini kontrol eder
+        ✅ Gerekli kütüphaneleri yükler
+        ✅ MongoDB'yi başlatır
+        ✅ Backend ve Frontend'i başlatır
+        
+Adım 2: Terminal pencerelerini kontrol edin
+        ↓
+        2 ayrı terminal penceresi açılacak:
+        
+        🟢 BACKEND Terminal:
+           ============================================================
+           🚀 PLAKA OKUMA SİSTEMİ BAŞLATILIYOR...
+           ============================================================
+           📊 MongoDB Bağlantısı: mongodb://localhost:27017
+           💾 Veritabanı: test_database
+           ✅ MongoDB bağlantısı başarılı!
+           ...
+           ✅ SUNUCU HAZIR!
+           ============================================================
+           
+        🔵 FRONTEND Terminal:
+           Webpack compiled successfully!
+           You can now view plaka-tanima in the browser.
+           Local: http://localhost:3000
+
+Adım 3: Tarayıcıda http://localhost:3000 otomatik açılacak
+        ↓
+        Sistem kullanıma hazır! 🎉
+
+
+════════════════════════════════════════════════════════════════════════
+2️⃣  NORMAL KULLANIM (İkinci kez ve sonrası)
+════════════════════════════════════════════════════════════════════════
+
+SEÇENEK A: Her şeyi tek seferde başlat
+───────────────────────────────────────
+START_ALL.bat dosyasını çift tıklayın
+✅ MongoDB, Backend ve Frontend'i otomatik başlatır
+
+
+SEÇENEK B: Ayrı ayrı başlat
+───────────────────────────
+1. Backend'i başlat:
+   backend\START_BACKEND.bat
+   
+2. Frontend'i başlat:
+   frontend\START_FRONTEND.bat
+
+
+════════════════════════════════════════════════════════════════════════
+3️⃣  SORUN GİDERME
+════════════════════════════════════════════════════════════════════════
+
+❌ PROBLEM: Backend terminal penceresi boş kalıyor
+─────────────────────────────────────────────────────
+✅ ÇÖZÜM: 
+   1. Backend terminalinde yukarı kaydırın
+   2. Startup mesajlarını göreceksiniz
+   3. Eğer hata mesajı varsa, aşağıdaki adımları izleyin
+
+
+❌ PROBLEM: "MongoDB bağlantı hatası"
+─────────────────────────────────────────────────
+✅ ÇÖZÜM:
+   1. Komut istemini yönetici olarak açın
+   2. Şu komutu çalıştırın: net start MongoDB
+   3. Backend'i tekrar başlatın
+
+
+❌ PROBLEM: "Port 8001 veya 3000 zaten kullanımda"
+─────────────────────────────────────────────────
+✅ ÇÖZÜM:
+   1. Görev yöneticisini açın (Ctrl+Shift+Esc)
+   2. "python.exe" ve "node.exe" işlemlerini sonlandırın
+   3. Sistemi tekrar başlatın
+
+
+❌ PROBLEM: Frontend yüklenmiyor, beyaz ekran
+─────────────────────────────────────────────────
+✅ ÇÖZÜM:
+   1. Frontend terminalinde hata var mı kontrol edin
+   2. Backend terminalinin çalıştığından emin olun
+   3. Tarayıcıyı yenileyin (F5)
+   4. Cache'i temizleyin (Ctrl+Shift+R)
+
+
+❌ PROBLEM: Kamera görüntüsü gelmiyor
+─────────────────────────────────────────────────
+✅ ÇÖZÜM:
+   1. "Kamera Yönetimi" sayfasına gidin
+   2. Kamera ekleyin:
+      • İsim: Giriş Kamerası
+      • Tip: webcam (bilgisayar kamerası için)
+      • URL: 0 (varsayılan kamera)
+      • Kapı: Bir kapı seçin
+   3. Kamerayı "Başlat" düğmesine basarak aktive edin
+
+
+════════════════════════════════════════════════════════════════════════
+4️⃣  ÖZELLİKLER
+════════════════════════════════════════════════════════════════════════
+
+🏢 Site Yönetimi
+───────────────
+• Site, blok ve daire bilgilerini kaydedin
+• Her site için birden fazla blok tanımlayın
+
+🚗 Plaka Yönetimi
+───────────────
+• Araç plakalarını kaydedin
+• Her daireye 3'e kadar plaka atayın
+• Plaka durumu: İzinli / Yasaklı
+• Geçerlilik tarihi belirleyin
+
+📹 Kamera Yönetimi
+───────────────
+• 4 kameraya kadar ekleyin (2x2 grid)
+• Desteklenen tipler:
+  - Webcam (USB kamera)
+  - RTSP (IP kamera)
+  - HTTP (HTTP stream)
+• Her kamera için FPS ayarı
+
+🚪 Kapı Yönetimi
+───────────────
+• NodeMCU kontrollü kapıları tanımlayın
+• Test butonu ile kapı açma simülasyonu
+• Otomatik açılma (gelecekte eklenecek)
+
+📊 Gerçek Zamanlı Tanıma
+───────────────
+• YOLOv8 ile araç tespiti
+• Tesseract OCR ile plaka okuma
+• Renkli kutular:
+  🟢 Yeşil = İzinli plaka
+  🟡 Sarı = Tanınmayan plaka
+  🔴 Kırmızı = Yasaklı plaka
+
+📈 İstatistikler ve Raporlar
+───────────────
+• Günlük geçiş sayıları
+• Sistem durumu (CPU, RAM)
+• Filtrelenebilir log geçmişi
+
+
+════════════════════════════════════════════════════════════════════════
+📞 DESTEK
+════════════════════════════════════════════════════════════════════════
+
+Sorun yaşarsanız:
+1. Backend ve Frontend terminallerinde hata mesajlarını okuyun
+2. Bu dosyadaki "Sorun Giderme" bölümünü kontrol edin
+3. Sistemi kapatıp tekrar başlatmayı deneyin
+
+
+════════════════════════════════════════════════════════════════════════
+💡 İPUÇLARI
+════════════════════════════════════════════════════════════════════════
+
+• Backend ve Frontend terminallerini KAPATMAYIN! Sistem çalışırken 
+  açık kalmalılar.
+
+• İlk kez kamera eklediğinizde, tarayıcınız kamera erişimi için izin 
+  isteyecektir. İzin vermeyi unutmayın!
+
+• Plaka tanıma performansı kamera kalitesine ve ışık koşullarına 
+  bağlıdır.
+
+• Demo modda (kamera bağlanamadığında) örnek görüntüler gösterilir.
+
+
+════════════════════════════════════════════════════════════════════════
+
+İyi kullanımlar! 🚀
