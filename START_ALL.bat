@@ -18,7 +18,7 @@ echo.
 
 echo [2/3] Backend baslatiliyor...
 cd backend
-start "BACKEND - Plaka Tanima" cmd /k "venv\Scripts\python.exe server.py"
+start "BACKEND - Plaka Tanima" cmd /k "START_BACKEND.bat"
 cd ..
 echo   [OK] Backend terminal acildi
 timeout /t 5 >nul
