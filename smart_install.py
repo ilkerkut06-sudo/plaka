@@ -292,10 +292,10 @@ class SmartInstaller:
                 return False
             self.log("Virtual environment oluşturuldu", "FIX")
         
-        # Pip'i güncelle
-        pip_path = venv_path / "Scripts" / "pip.exe"
+        # Pip'i güncelle (doğru yöntem)
+        python_path = venv_path / "Scripts" / "python.exe"
         self.log("pip güncelleniyor...", "INFO")
-        self.run_command(f"{pip_path} install --upgrade pip")
+        self.run_command(f"{python_path} -m pip install --upgrade pip")
         
         # Requirements'ı kur
         self.log("Python paketleri kuruluyor (bu biraz zaman alabilir)...", "INFO")
