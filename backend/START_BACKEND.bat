@@ -52,7 +52,9 @@ echo   Backend logları aşağıda görünecek:
 echo ============================================================
 echo.
 
-"%CD%\venv\Scripts\python.exe" -m uvicorn server:app --host 0.0.0.0 --port %BACKEND_PORT% --reload
+REM Activate venv and run uvicorn
+call "%CD%\venv\Scripts\activate.bat"
+uvicorn server:app --host 0.0.0.0 --port %BACKEND_PORT% --reload
 
 echo.
 echo ============================================================
