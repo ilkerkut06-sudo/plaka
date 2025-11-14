@@ -63,15 +63,22 @@ echo.
 echo [4/6] Tesseract OCR kontrol ediliyor...
 tesseract --version >nul 2>&1
 if errorlevel 1 (
-    echo UYARI: Tesseract OCR bulunamadi!
-    echo.
-    echo Plaka okuma icin Tesseract OCR kurulmali:
-    echo https://github.com/UB-Mannheim/tesseract/wiki
-    echo.
-    echo Kurulum sirasinda "Turkish" dil paketini secin!
-    echo Tesseract olmadan devam etmek ister misiniz? (E/H)
-    set /p continue=">"
-    if /i not "%continue%"=="E" exit /b 1
+    :: Try common Tesseract paths
+    if exist "C:\Program Files\Tesseract-OCR\tesseract.exe" (
+        set PATH=%PATH%;C:\Program Files\Tesseract-OCR
+        echo OK - Tesseract OCR bulundu (Program Files)
+    ) else if exist "C:\Program Files (x86)\Tesseract-OCR\tesseract.exe" (
+        set PATH=%PATH%;C:\Program Files (x86)\Tesseract-OCR
+        echo OK - Tesseract OCR bulundu (Program Files x86)
+    ) else if exist "C:\Tesseract-OCR\tesseract.exe" (
+        set PATH=%PATH%;C:\Tesseract-OCR
+        echo OK - Tesseract OCR bulundu (C:\)
+    ) else (
+        echo UYARI: Tesseract OCR PATH'de bulunamadi!
+        echo Tesseract yuklu ama PATH'e eklenmemis olabilir.
+        echo Plaka okuma calismayabilir!
+        echo Yine de devam ediliyor...
+    )
 ) else (
     echo OK - Tesseract OCR bulundu
 )
