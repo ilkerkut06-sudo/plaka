@@ -50,14 +50,24 @@ if errorlevel 1 (
 )
 echo.
 
-echo [TEST 5] MongoDB calisiyor mu?
-net start MongoDB >nul 2>&1
-mongod --version >nul 2>&1
+echo [TEST 5] MongoDB baslatiliyor...
+"C:\Program Files\MongoDB\Server\7.0\bin\mongod.exe" --version >nul 2>&1
 if errorlevel 1 (
-    echo   [UYARI] MongoDB bulunamadi
-    echo   MongoDB kurun veya PATH'e ekleyin
+    echo   [UYARI] MongoDB 7.0 bulunamadi
+    "C:\Program Files\MongoDB\Server\6.0\bin\mongod.exe" --version >nul 2>&1
+    if errorlevel 1 (
+        echo   [HATA] MongoDB kurulu degil!
+        pause
+        exit /b 1
+    )
+)
+
+net start MongoDB >nul 2>&1
+if errorlevel 1 (
+    echo   [UYARI] MongoDB servisi baslatilamadi
+    echo   MongoDB zaten calisiyor olabilir
 ) else (
-    echo   [OK] MongoDB bulundu
+    echo   [OK] MongoDB servisi baslatildi
 )
 echo.
 
