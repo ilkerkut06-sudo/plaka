@@ -39,14 +39,21 @@ echo.
 echo [3/6] MongoDB kontrol ediliyor...
 mongod --version >nul 2>&1
 if errorlevel 1 (
-    echo UYARI: MongoDB bulunamadi!
-    echo.
-    echo MongoDB Community Edition yuklemeniz onerilir:
-    echo https://www.mongodb.com/try/download/community
-    echo.
-    echo MongoDB olmadan devam etmek ister misiniz? (E/H)
-    set /p continue=">"
-    if /i not "%continue%"=="E" exit /b 1
+    :: Try common MongoDB paths
+    if exist "C:\Program Files\MongoDB\Server\7.0\bin\mongod.exe" (
+        set PATH=%PATH%;C:\Program Files\MongoDB\Server\7.0\bin
+        echo OK - MongoDB bulundu (7.0)
+    ) else if exist "C:\Program Files\MongoDB\Server\6.0\bin\mongod.exe" (
+        set PATH=%PATH%;C:\Program Files\MongoDB\Server\6.0\bin
+        echo OK - MongoDB bulundu (6.0)
+    ) else if exist "C:\Program Files\MongoDB\Server\5.0\bin\mongod.exe" (
+        set PATH=%PATH%;C:\Program Files\MongoDB\Server\5.0\bin
+        echo OK - MongoDB bulundu (5.0)
+    ) else (
+        echo UYARI: MongoDB PATH'de bulunamadi!
+        echo MongoDB yuklu ama PATH'e eklenmemis olabilir.
+        echo Yine de devam ediliyor...
+    )
 ) else (
     echo OK - MongoDB bulundu
 )
