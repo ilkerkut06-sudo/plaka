@@ -19,15 +19,20 @@ echo.
 echo [1/7] Checking requirements...
 echo.
 
-python --version >nul 2>&1
+py --version >nul 2>&1
 if errorlevel 1 (
-    color 0C
-    echo ERROR: Python not found!
-    echo.
-    echo Install Python: https://www.python.org/downloads/
-    echo Check "Add Python to PATH" during installation!
-    pause
-    exit /b 1
+    python --version >nul 2>&1
+    if errorlevel 1 (
+        color 0C
+        echo ERROR: Python not found!
+        echo.
+        echo Install Python: https://www.python.org/downloads/
+        pause
+        exit /b 1
+    )
+    set PYTHON_CMD=python
+) else (
+    set PYTHON_CMD=py
 )
 echo   [OK] Python found
 
