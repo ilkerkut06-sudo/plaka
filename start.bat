@@ -5,13 +5,33 @@ echo   Evo Teknoloji
 echo ================================================
 echo.
 
+:: Setup MongoDB PATH
+if exist "C:\Program Files\MongoDB\Server\7.0\bin\mongod.exe" (
+    set PATH=%PATH%;C:\Program Files\MongoDB\Server\7.0\bin
+) else if exist "C:\Program Files\MongoDB\Server\6.0\bin\mongod.exe" (
+    set PATH=%PATH%;C:\Program Files\MongoDB\Server\6.0\bin
+) else if exist "C:\Program Files\MongoDB\Server\5.0\bin\mongod.exe" (
+    set PATH=%PATH%;C:\Program Files\MongoDB\Server\5.0\bin
+)
+
+:: Setup Tesseract PATH
+if exist "C:\Program Files\Tesseract-OCR\tesseract.exe" (
+    set PATH=%PATH%;C:\Program Files\Tesseract-OCR
+) else if exist "C:\Program Files (x86)\Tesseract-OCR\tesseract.exe" (
+    set PATH=%PATH%;C:\Program Files (x86)\Tesseract-OCR
+) else if exist "C:\Tesseract-OCR\tesseract.exe" (
+    set PATH=%PATH%;C:\Tesseract-OCR
+)
+
 :: Check MongoDB
 echo MongoDB kontrol ediliyor...
 mongod --version >nul 2>&1
 if errorlevel 1 (
-    echo UYARI: MongoDB bulunamadi veya calismiyor!
-    echo MongoDB'yi baslatmayi deneyin: net start MongoDB
+    echo UYARI: MongoDB bulunamadi!
+    echo MongoDB'yi manuel baslatabilirsiniz: net start MongoDB
     echo.
+) else (
+    echo OK - MongoDB hazir
 )
 
 :: Create data directory for MongoDB if needed
