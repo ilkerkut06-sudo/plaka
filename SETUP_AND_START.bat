@@ -211,7 +211,7 @@ echo [6/7] Starting backend...
 echo.
 
 cd backend
-start "LICENSE PLATE SYSTEM - BACKEND" cmd /k "call venv\Scripts\activate && python server.py"
+start "LICENSE PLATE SYSTEM - BACKEND" cmd /k "call venv\Scripts\activate && uvicorn server:app --host 0.0.0.0 --port 8001 --reload"
 cd ..
 
 echo   [OK] Backend terminal opened
