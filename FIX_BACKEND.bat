@@ -71,9 +71,27 @@ echo ================================================
 echo   BACKEND HAZIR!
 echo ================================================
 echo.
+echo MongoDB kontrol ediliyor...
+net start MongoDB >nul 2>&1
+echo.
 echo Simdi backend baslatiliyor...
+echo HATA VARSA GORECEKSINIZ!
 echo.
 pause
 
+echo.
+echo ================================================
+echo BACKEND BASLATILIYOR...
+echo ================================================
+echo.
+
 venv\Scripts\python.exe server.py
+if errorlevel 1 (
+    echo.
+    echo HATA: Backend baslatilamadi!
+    echo Yukaridaki hata mesajini okuyun.
+)
+
+echo.
+echo Backend kapandi veya hata aldi.
 pause
