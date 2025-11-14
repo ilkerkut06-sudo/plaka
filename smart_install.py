@@ -482,9 +482,10 @@ class SmartInstaller:
             return False
         
         # MongoDB ve Tesseract opsiyonel uyarılar
-        if not mongodb_ok:
+        # Eğer PATH'e eklendiyse, artık çalışıyor demektir
+        if not mongodb_ok and not any("MongoDB" in fix for fix in self.fixes_applied):
             self.warnings.append("MongoDB kurulmamış - sistem çalışmayabilir")
-        if not tesseract_ok:
+        if not tesseract_ok and not any("Tesseract" in fix for fix in self.fixes_applied):
             self.warnings.append("Tesseract kurulmamış - plaka okuma çalışmayacak")
         
         # Backend kurulum
