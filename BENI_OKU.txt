@@ -24,6 +24,7 @@ ADIM 1: PROGRAMLARI YUKLEYIN
 ADIM 2: OTOMATIK KURULUM
 =========================
 
+YONTEM 1 (Onerilir):
 KURULUM.bat dosyasina CIFT TIKLAYIN
 
 Sistem otomatik olarak her seyi halleder:
@@ -31,6 +32,11 @@ Sistem otomatik olarak her seyi halleder:
 - Paketleri kurar
 - Ayarlari yapar
 - BASLA.bat olusturur
+
+YONTEM 2 (Timeout sorunu varsa):
+HIZLI_KURULUM.bat dosyasina CIFT TIKLAYIN
+
+Bu yontem daha basit ve hizlidir.
 
 
 ADIM 3: SISTEMI BASLATIN
