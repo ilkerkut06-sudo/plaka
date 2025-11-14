@@ -340,14 +340,25 @@ class SmartInstaller:
         self.log("npm cache temizleniyor...", "INFO")
         self.run_command("npm cache clean --force")
         
-        # npm install
-        self.log("Node paketleri kuruluyor (bu biraz zaman alabilir)...", "INFO")
+        # npm install - yarn varsa onu kullan (daha hızlı)
+        self.log("Node paketleri kuruluyor (bu 5-10 dakika sürebilir)...", "INFO")
         
-        # İlk önce legacy-peer-deps ile kur (daha güvenli)
-        success, stdout, stderr = self.run_command("npm install --legacy-peer-deps")
+        # Yarn var mı kontrol et
+        has_yarn = shutil.which("yarn") is not None
+        
+        if has_yarn:
+            self.log("Yarn kullanılarak kurulum yapılıyor...", "INFO")
+            success, stdout, stderr = self.run_command("yarn install", timeout=900)
+        else:
+            self.log("npm kullanılarak kurulum yapılıyor...", "INFO")
+            success, stdout, stderr = self.run_command("npm install --legacy-peer-deps", timeout=900)
         
         if not success:
-            self.log(f"npm install hatası: {stderr}", "ERROR")
+            if "timed out" in stderr:
+                self.log("Kurulum zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.", "ERROR")
+                self.log("Alternatif: DUZELT.bat ile manuel kurulum yapabilirsiniz.", "WARNING")
+            else:
+                self.log(f"Paket kurulum hatası: {stderr}", "ERROR")
             os.chdir("..")
             self.errors.append("Frontend paket kurulum hatası")
             return False
