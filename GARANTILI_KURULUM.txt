@@ -1,0 +1,261 @@
+================================================
+  GARANTİLİ MANUEL KURULUM - ADIM ADIM
+  Her adımı yapın, test edin, ilerleyin
+================================================
+
+ÖNEMLİ: Her adımı sırayla yapın, atlama yapmayın!
+
+════════════════════════════════════════════════
+ADIM 1: GEREKSİNİMLERİ KONTROL EDİN
+════════════════════════════════════════════════
+
+Komut satırını (cmd) açın ve test edin:
+
+1. Python kontrolü:
+   python --version
+   
+   Görmeli: Python 3.9 veya üzeri
+   Görmüyorsa: Python'u PATH'e ekleyin veya yeniden kurun
+
+2. Node.js kontrolü:
+   node --version
+   
+   Görmeli: v18.0.0 veya üzeri
+   Görmüyorsa: Node.js'i PATH'e ekleyin
+
+3. MongoDB kontrolü:
+   mongod --version
+   
+   Görmüyorsa: 
+   cd "C:\Program Files\MongoDB\Server\7.0\bin"
+   mongod --version
+   
+   Bu klasördeyse, PATH'e ekleyin (aşağıda anlatıldı)
+
+4. Tesseract kontrolü:
+   tesseract --version
+   
+   Görmüyorsa:
+   cd "C:\Program Files\Tesseract-OCR"
+   tesseract --version
+   
+   Bu klasördeyse, PATH'e ekleyin
+
+
+════════════════════════════════════════════════
+ADIM 2: PATH'E EKLEME (Gerekirse)
+════════════════════════════════════════════════
+
+MongoDB veya Tesseract bulunamadıysa:
+
+1. Windows tuşuna basın, "environment" yazın
+2. "Edit the system environment variables" açın
+3. "Environment Variables" butonuna tıklayın
+4. "User variables" altında "Path" seçin, "Edit" tıklayın
+5. "New" butonuna tıklayın
+6. Ekleyin:
+   C:\Program Files\MongoDB\Server\7.0\bin
+   C:\Program Files\Tesseract-OCR
+7. OK, OK, OK tıklayın
+8. Tüm terminalleri kapatın
+9. Yeni terminal açın ve tekrar kontrol edin
+
+
+════════════════════════════════════════════════
+ADIM 3: BACKEND KURULUMU
+════════════════════════════════════════════════
+
+1. Proje klasörüne gidin:
+   cd C:\Users\EVOTO\Downloads\plaka-main
+
+2. Backend klasörüne gidin:
+   cd backend
+
+3. Eski venv varsa silin:
+   rmdir /s /q venv
+
+4. Yeni virtual environment oluşturun:
+   python -m venv venv
+
+5. Virtual environment'ı aktif edin:
+   venv\Scripts\activate
+
+6. pip güncelleyin:
+   python -m pip install --upgrade pip
+
+7. Paketleri kurun (5-10 dakika sürebilir):
+   python -m pip install -r requirements.txt
+
+8. BEKLEYIN! Kurulum tamamlanana kadar.
+
+9. Kontrol edin:
+   python -m pip list | findstr fastapi
+   
+   Görmeli: fastapi ile başlayan satırlar
+
+10. .env dosyası oluşturun:
+    notepad .env
+    
+    İçine yazın:
+    MONGO_URL=mongodb://localhost:27017
+    DB_NAME=plaka_tanima_db
+    CORS_ORIGINS=http://localhost:3000
+    
+    Kaydet ve kapat
+
+11. Ana klasöre dönün:
+    cd ..
+
+
+════════════════════════════════════════════════
+ADIM 4: FRONTEND KURULUMU
+════════════════════════════════════════════════
+
+1. Frontend klasörüne gidin:
+   cd frontend
+
+2. Eski node_modules varsa silin:
+   rmdir /s /q node_modules
+
+3. Cache temizleyin:
+   npm cache clean --force
+
+4. Paketleri kurun (5-10 dakika):
+   npm install --legacy-peer-deps
+
+5. BEKLEYIN! Kurulum tamamlanana kadar.
+
+6. Kontrol edin:
+   dir node_modules
+   
+   Görmeli: Birçok klasör
+
+7. .env dosyası oluşturun:
+   notepad .env
+   
+   İçine yazın:
+   REACT_APP_BACKEND_URL=http://localhost:8001
+   
+   Kaydet ve kapat
+
+8. Ana klasöre dönün:
+   cd ..
+
+
+════════════════════════════════════════════════
+ADIM 5: MONGODB'Yİ BAŞLATIN
+════════════════════════════════════════════════
+
+Yönetici olarak cmd açın:
+
+net start MongoDB
+
+Hata alırsanız:
+- MongoDB zaten çalışıyordur (OK!)
+- Veya servis kurmadıysanız, başka terminalde çalıştırın:
+  "C:\Program Files\MongoDB\Server\7.0\bin\mongod.exe" --dbpath C:\data\db
+
+
+════════════════════════════════════════════════
+ADIM 6: BACKEND'İ BAŞLATIN
+════════════════════════════════════════════════
+
+Yeni bir terminal penceresi açın:
+
+1. Proje klasörüne gidin:
+   cd C:\Users\EVOTO\Downloads\plaka-main
+
+2. Backend klasörüne gidin:
+   cd backend
+
+3. Virtual environment aktif edin:
+   venv\Scripts\activate
+
+4. Server'ı başlatın:
+   python server.py
+
+5. Görmelisiniz:
+   INFO:     Uvicorn running on http://0.0.0.0:8001
+
+6. Bu pencereyi AÇIK BIRAKIN!
+
+
+════════════════════════════════════════════════
+ADIM 7: FRONTEND'İ BAŞLATIN
+════════════════════════════════════════════════
+
+YENİ bir terminal penceresi açın:
+
+1. Proje klasörüne gidin:
+   cd C:\Users\EVOTO\Downloads\plaka-main
+
+2. Frontend klasörüne gidin:
+   cd frontend
+
+3. Frontend'i başlatın:
+   npm start
+
+4. Tarayıcınızda otomatik açılacak:
+   http://localhost:3000
+
+5. Bu pencereyi de AÇIK BIRAKIN!
+
+
+════════════════════════════════════════════════
+ADIM 8: TEST EDİN
+════════════════════════════════════════════════
+
+1. Tarayıcıda http://localhost:3000 açık mı?
+2. Yan menü görünüyor mu?
+3. Ana ekran yükleniyor mu?
+
+ÇALIŞIYORSA: TEBRİKLER! Sistem hazır.
+
+ÇALIŞMIYORSA: 
+- Backend terminalinde hata var mı? (kırmızı yazılar)
+- Frontend terminalinde hata var mı?
+- Tarayıcı console'da (F12) hata var mı?
+
+Hata varsa, tam hata mesajını bana gönderin.
+
+
+════════════════════════════════════════════════
+SORUN GİDERME
+════════════════════════════════════════════════
+
+Backend başlamıyorsa:
+- MongoDB çalışıyor mu kontrol edin
+- requirements.txt'deki tüm paketler kuruldu mu kontrol edin
+- .env dosyası var mı kontrol edin
+
+Frontend başlamıyorsa:
+- node_modules klasörü var mı
+- npm install hatasız bitti mi
+- Port 3000 başka program tarafından kullanılıyor mu
+
+Backend'e ulaşamıyorsa:
+- http://localhost:8001 tarayıcıda açılıyor mu
+- Backend terminali çalışıyor mu
+
+
+════════════════════════════════════════════════
+GELECEK İÇİN: KOLAYCA BAŞLATMA
+════════════════════════════════════════════════
+
+Sistem çalıştıktan sonra, not defterine yazın:
+
+start_backend.bat:
+cd backend
+call venv\Scripts\activate
+python server.py
+
+start_frontend.bat:
+cd frontend
+npm start
+
+İki bat dosyasını da kaydedin. Sonra çift tıklayarak başlatın.
+
+
+================================================
+Bu yöntem %100 çalışmalı. Her adımı dikkatle yapın.
+================================================
