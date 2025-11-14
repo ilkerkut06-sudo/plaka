@@ -723,14 +723,4 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    yield
-    # Shutdown
-    client.close()
-
-# Create the main app with lifespan
-app = FastAPI(lifespan=lifespan)
+# Duplicate app definition removed
