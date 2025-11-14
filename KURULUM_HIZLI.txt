@@ -63,12 +63,18 @@ Cozum: Python'u yukleyin ve "Add to PATH" secenegini isaretleyin
        Bilgisayari yeniden baslatin
 
 Problem: MongoDB baglanamadi
-Cozum: MongoDB servisini baslatin
-       Komut satiri: net start MongoDB
+Cozum: 1. MongoDB servisini baslatin: net start MongoDB
+       2. VEYA setup_path.bat'i yonetici olarak calistirin
+       3. Terminal'i kapatip yeniden acin
 
 Problem: Tesseract bulunamadi
-Cozum: PATH'e ekleyin
-       set PATH=%PATH%;C:\Program Files\Tesseract-OCR
+Cozum: 1. setup_path.bat'i yonetici olarak calistirin
+       2. Terminal'i kapatip yeniden acin
+       3. Test: tesseract --version
+
+Problem: "Bulunamadi" sonra "Bulundu" diyor
+Cozum: Bu normal! Script otomatik PATH ekliyor.
+       Kalici cozum icin setup_path.bat calistirin.
 
 Problem: Kamera baglanamadi
 Cozum: - Webcam icin URL: 0 yazin
