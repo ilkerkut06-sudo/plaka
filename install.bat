@@ -25,30 +25,30 @@ echo.
 echo [2/6] Node.js kontrol ediliyor...
 node --version >nul 2>&1
 if errorlevel 1 (
-    echo ❌ Node.js bulunamadı!
+    echo HATA: Node.js bulunamadi!
     echo.
-    echo Node.js 18 veya üzeri yüklemeniz gerekiyor:
+    echo Node.js 18 veya uzeri yuklemeniz gerekiyor:
     echo https://nodejs.org/
     pause
     exit /b 1
 )
-echo ✓ Node.js bulundu
+echo OK - Node.js bulundu
 echo.
 
 :: Check MongoDB
 echo [3/6] MongoDB kontrol ediliyor...
 mongod --version >nul 2>&1
 if errorlevel 1 (
-    echo ⚠ MongoDB bulunamadı!
+    echo UYARI: MongoDB bulunamadi!
     echo.
-    echo MongoDB Community Edition yüklemeniz önerilir:
+    echo MongoDB Community Edition yuklemeniz onerilir:
     echo https://www.mongodb.com/try/download/community
     echo.
     echo MongoDB olmadan devam etmek ister misiniz? (E/H)
     set /p continue=">"
     if /i not "%continue%"=="E" exit /b 1
 ) else (
-    echo ✓ MongoDB bulundu
+    echo OK - MongoDB bulundu
 )
 echo.
 
@@ -56,34 +56,34 @@ echo.
 echo [4/6] Tesseract OCR kontrol ediliyor...
 tesseract --version >nul 2>&1
 if errorlevel 1 (
-    echo ⚠ Tesseract OCR bulunamadı!
+    echo UYARI: Tesseract OCR bulunamadi!
     echo.
-    echo Plaka okuma için Tesseract OCR kurulmalı:
+    echo Plaka okuma icin Tesseract OCR kurulmali:
     echo https://github.com/UB-Mannheim/tesseract/wiki
     echo.
-    echo Kurulum sırasında "Turkish" dil paketini seçin!
+    echo Kurulum sirasinda "Turkish" dil paketini secin!
     echo Tesseract olmadan devam etmek ister misiniz? (E/H)
     set /p continue=">"
     if /i not "%continue%"=="E" exit /b 1
 ) else (
-    echo ✓ Tesseract OCR bulundu
+    echo OK - Tesseract OCR bulundu
 )
 echo.
 
 :: Install Backend Dependencies
-echo [5/6] Backend bağımlılıkları kuruluyor...
+echo [5/6] Backend bagimliliklari kuruluyor...
 cd backend
 if exist requirements.txt (
     pip install -r requirements.txt
     if errorlevel 1 (
-        echo ❌ Backend bağımlılıkları kurulamadı!
+        echo HATA: Backend bagimliliklari kurulamadi!
         cd ..
         pause
         exit /b 1
     )
-    echo ✓ Backend bağımlılıkları kuruldu
+    echo OK - Backend bagimliliklari kuruldu
 ) else (
-    echo ❌ requirements.txt bulunamadı!
+    echo HATA: requirements.txt bulunamadi!
     cd ..
     pause
     exit /b 1
@@ -92,23 +92,23 @@ cd ..
 echo.
 
 :: Install Frontend Dependencies
-echo [6/6] Frontend bağımlılıkları kuruluyor...
+echo [6/6] Frontend bagimliliklari kuruluyor...
 cd frontend
 if exist package.json (
     call npm install
     if errorlevel 1 (
-        echo ⚠ npm install başarısız, yarn deneniyor...
+        echo UYARI: npm install basarisiz, yarn deneniyor...
         call yarn install
         if errorlevel 1 (
-            echo ❌ Frontend bağımlılıkları kurulamadı!
+            echo HATA: Frontend bagimliliklari kurulamadi!
             cd ..
             pause
             exit /b 1
         )
     )
-    echo ✓ Frontend bağımlılıkları kuruldu
+    echo OK - Frontend bagimliliklari kuruldu
 ) else (
-    echo ❌ package.json bulunamadı!
+    echo HATA: package.json bulunamadi!
     cd ..
     pause
     exit /b 1
@@ -117,29 +117,29 @@ cd ..
 echo.
 
 :: Setup Environment Files
-echo Ortam değişkenleri ayarlanıyor...
+echo Ortam degiskenleri ayarlaniyor...
 
 if not exist "backend\.env" (
     echo MONGO_URL=mongodb://localhost:27017 > backend\.env
     echo DB_NAME=plaka_tanima_db >> backend\.env
     echo CORS_ORIGINS=http://localhost:3000 >> backend\.env
-    echo ✓ backend/.env oluşturuldu
+    echo OK - backend/.env olusturuldu
 )
 
 if not exist "frontend\.env" (
     echo REACT_APP_BACKEND_URL=http://localhost:8001 > frontend\.env
-    echo ✓ frontend/.env oluşturuldu
+    echo OK - frontend/.env olusturuldu
 )
 
 echo.
-echo ╔════════════════════════════════════════════════════════╗
-echo ║   ✅ KURULUM TAMAMLANDI!                              ║
-echo ╚════════════════════════════════════════════════════════╝
+echo ================================================
+echo   KURULUM TAMAMLANDI!
+echo ================================================
 echo.
-echo Sistemi başlatmak için 'start.bat' dosyasını çalıştırın.
+echo Sistemi baslatmak icin 'start.bat' dosyasini calistirin.
 echo.
-echo Önemli Notlar:
-echo - MongoDB servisinin çalıştığından emin olun
+echo Onemli Notlar:
+echo - MongoDB servisinin calistigindan emin olun
 echo - Backend: http://localhost:8001
 echo - Frontend: http://localhost:3000
 echo.
