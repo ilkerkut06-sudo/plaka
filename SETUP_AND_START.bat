@@ -49,21 +49,21 @@ echo   [OK] Node.js found
 
 :: Add MongoDB to PATH
 if exist "C:\Program Files\MongoDB\Server\7.0\bin" (
-    set PATH=%PATH%;C:\Program Files\MongoDB\Server\7.0\bin
+    set "PATH=%PATH%;C:\Program Files\MongoDB\Server\7.0\bin"
 )
 if exist "C:\Program Files\MongoDB\Server\6.0\bin" (
-    set PATH=%PATH%;C:\Program Files\MongoDB\Server\6.0\bin
+    set "PATH=%PATH%;C:\Program Files\MongoDB\Server\6.0\bin"
 )
 if exist "C:\Program Files\MongoDB\Server\5.0\bin" (
-    set PATH=%PATH%;C:\Program Files\MongoDB\Server\5.0\bin
+    set "PATH=%PATH%;C:\Program Files\MongoDB\Server\5.0\bin"
 )
 
 :: Add Tesseract to PATH
 if exist "C:\Program Files\Tesseract-OCR" (
-    set PATH=%PATH%;C:\Program Files\Tesseract-OCR
+    set "PATH=%PATH%;C:\Program Files\Tesseract-OCR"
 )
 if exist "C:\Program Files (x86)\Tesseract-OCR" (
-    set PATH=%PATH%;C:\Program Files (x86)\Tesseract-OCR
+    set "PATH=%PATH%;C:\Program Files (x86)\Tesseract-OCR"
 )
 
 echo.
