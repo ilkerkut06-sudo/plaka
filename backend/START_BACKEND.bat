@@ -21,15 +21,20 @@ if not exist "venv\Scripts\python.exe" (
 echo ✅ Virtual environment bulundu
 echo.
 
+REM Read PORT from .env file (default 8001)
+set BACKEND_PORT=8001
+for /f "tokens=1,2 delims==" %%a in ('findstr /r "^PORT=" .env 2^>nul') do set BACKEND_PORT=%%b
+
 REM Activate virtual environment and start server
 echo 📡 Sunucu başlatılıyor...
+echo 🌐 Port: %BACKEND_PORT%
 echo.
 echo ============================================================
 echo   Backend logları aşağıda görünecek:
 echo ============================================================
 echo.
 
-venv\Scripts\python.exe -m uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+venv\Scripts\python.exe -m uvicorn server:app --host 0.0.0.0 --port %BACKEND_PORT% --reload
 
 echo.
 echo ============================================================
