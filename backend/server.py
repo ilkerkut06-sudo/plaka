@@ -746,6 +746,14 @@ async def websocket_detections(websocket: WebSocket):
 # Include router
 app.include_router(api_router)
 
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request, call_next):
+    logger.info(f"📨 {request.method} {request.url.path}")
+    response = await call_next(request)
+    logger.info(f"✅ {request.method} {request.url.path} - Status: {response.status_code}")
+    return response
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
