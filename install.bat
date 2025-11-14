@@ -1,25 +1,24 @@
 @echo off
-chcp 65001 >nul
-echo ╔════════════════════════════════════════════════════════╗
-echo ║   Plaka Tanıma Sistemi - Otomatik Kurulum             ║
-echo ║   Evo Teknoloji                                        ║
-echo ╚════════════════════════════════════════════════════════╝
+echo ================================================
+echo   Plaka Tanima Sistemi - Kurulum
+echo   Evo Teknoloji
+echo ================================================
 echo.
 
 :: Check Python
 echo [1/6] Python kontrol ediliyor...
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo ❌ Python bulunamadı!
+    echo HATA: Python bulunamadi!
     echo.
-    echo Python 3.9 veya üzeri yüklemeniz gerekiyor:
+    echo Python 3.9 veya uzeri yuklemeniz gerekiyor:
     echo https://www.python.org/downloads/
     echo.
-    echo Kurulum sırasında "Add Python to PATH" seçeneğini işaretleyin!
+    echo Kurulum sirasinda "Add Python to PATH" secenegini isaretleyin!
     pause
     exit /b 1
 )
-echo ✓ Python bulundu
+echo OK - Python bulundu
 echo.
 
 :: Check Node.js
