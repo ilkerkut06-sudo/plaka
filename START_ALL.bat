@@ -26,7 +26,7 @@ echo.
 
 echo [3/3] Frontend baslatiliyor...
 cd frontend
-start "FRONTEND - Plaka Tanima" cmd /k "npm start"
+start "FRONTEND - Plaka Tanima" cmd /k "START_FRONTEND.bat"
 cd ..
 echo   [OK] Frontend terminal acildi
 echo.
