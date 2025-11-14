@@ -300,7 +300,8 @@ class SmartInstaller:
         # Requirements'ı kur
         self.log("Python paketleri kuruluyor (bu biraz zaman alabilir)...", "INFO")
         success, stdout, stderr = self.run_command(
-            f"{pip_path} install -r {requirements_file}"
+            f"{python_path} -m pip install -r {requirements_file}",
+            timeout=600
         )
         
         if not success:
