@@ -1,79 +1,58 @@
 ================================================
-  PLAKA TANIMA SISTEMI - HIZLI BASLANGIC
+  PLAKA TANIMA SISTEMI - 3 ADIMDA KURULUM
   Evo Teknoloji
 ================================================
 
-ADIM 1: GEREKSINIMLERI YUKLEYIN
-================================
+ADIM 1: PROGRAMLARI YUKLEYIN
+=============================
 
-Sistemi kurmadan once asagidaki programlari yukleyin:
-
-1. Python 3.9 veya uzeri
+1. Python 3.9+
    https://www.python.org/downloads/
-   ONEMLI: "Add Python to PATH" isaretleyin!
+   !!! "Add Python to PATH" isaretleyin !!!
 
-2. Node.js 18 veya uzeri (LTS)
+2. Node.js 18+ (LTS)
    https://nodejs.org/
 
-3. MongoDB 6.0 veya uzeri
+3. MongoDB 6.0+
    https://www.mongodb.com/try/download/community
-   Windows Service olarak kurun
 
 4. Tesseract OCR
    https://github.com/UB-Mannheim/tesseract/wiki
-   ONEMLI: "Turkish" dil paketini secin!
+   !!! "Turkish" dil paketini secin !!!
 
 
 ADIM 2: OTOMATIK KURULUM
 =========================
 
-1. KURULUM.bat dosyasina CIFT TIKLAYIN
+KURULUM.bat dosyasina CIFT TIKLAYIN
 
-2. Sistem otomatik olarak:
-   - Tum bile\u015fenleri kontrol edecek
-   - PATH sorunlarini duzeltecek
-   - Python paketlerini kuracak
-   - Node.js paketlerini kuracak
-   - Environment dosyalarini olusturacak
-   - Baslatma scriptini hazirlayacak
-
-3. Kurulum tamamlandiginda "BASLA.bat" olusacak
+Sistem otomatik olarak her seyi halleder:
+- PATH sorunlarini duzeltir
+- Paketleri kurar
+- Ayarlari yapar
+- BASLA.bat olusturur
 
 
 ADIM 3: SISTEMI BASLATIN
 =========================
 
-1. BASLA.bat dosyasina CIFT TIKLAYIN
+BASLA.bat dosyasina CIFT TIKLAYIN
 
-2. 2 terminal penceresi acilacak:
-   - Backend (Python/FastAPI)
-   - Frontend (React)
-
-3. Tarayiciniz otomatik acilacak
-   http://localhost:3000
+Tarayicinizda acilacak: http://localhost:3000
 
 
-SORUN MU YASIYORSUNUZ?
-======================
+SORUN COZUM
+===========
 
+Hata aliyorsaniz:
 1. kurulum_log.txt dosyasini acin
-   (Tum kurulum adimlari burada)
-
-2. Hata mesajlarini okuyun
-
-3. PATH sorunlari icin:
-   - Bilgisayari yeniden baslatin
-   - setup_path.bat'i yonetici olarak calistirin
-
-4. Paket kurulum hatalari icin:
-   - Internet baglantinizi kontrol edin
-   - Guvenlik duvari ayarlarini kontrol edin
+2. Hatayi okuyun
+3. Bilgisayari yeniden baslatin
+4. Tekrar deneyin
 
 
-MANUEL KURULUM GEREKIYORSA
-===========================
-
-Eger otomatik kurulum calismiyorsa:
+MANUEL KURULUM
+===============
 
 1. Backend:
    cd backend
@@ -82,41 +61,20 @@ Eger otomatik kurulum calismiyorsa:
 
 2. Frontend:
    cd frontend
-   npm install
+   npm install --legacy-peer-deps
 
-3. Ortam degiskenleri:
-   backend\.env ve frontend\.env olusturun
-   (.env.example'lara bakin)
+3. Ortam dosyalari:
+   backend/.env ve frontend/.env olusturun
+   (Ornekler: .env.example)
 
-4. Baslatma:
-   BASLA_ORNEK.bat'i kullanin
-
-
-SISTEM GEREKSINIMLERI
-======================
-
-Minimum:
-- CPU: Intel Core i5 / AMD Ryzen 5
-- RAM: 8 GB
-- Disk: 5 GB bos alan
-- Internet: Kurulum icin gerekli
-
-Onerilen:
-- CPU: Intel Core i7 / AMD Ryzen 7
-- RAM: 16 GB
-- GPU: NVIDIA GTX 1060+ (CUDA)
-- Disk: 10 GB SSD
+4. Baslat:
+   Backend: cd backend && venv\Scripts\python server.py
+   Frontend: cd frontend && npm start
 
 
 DESTEK
 ======
 
-Sorun yasiyorsaniz:
-1. kurulum_log.txt'yi inceleyin
-2. README_KURULUM.md'yi okuyun
-3. GitHub Issues'da bildirim yapin
+GitHub Issues veya kurulum_log.txt inceleyin
 
-
-================================================
-Basarilar dileriz!
 ================================================
