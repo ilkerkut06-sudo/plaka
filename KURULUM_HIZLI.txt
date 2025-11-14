@@ -1,0 +1,96 @@
+================================================
+  PLAKA TANIMA SISTEMI - HIZLI KURULUM
+  Evo Teknoloji
+================================================
+
+ADIM 1: GEREKSINIMLERI YUKLEYIN
+================================
+
+1. Python 3.9+
+   Indirin: https://www.python.org/downloads/
+   ONEMLI: Kurulumda "Add Python to PATH" isaretleyin!
+
+2. Node.js 18+
+   Indirin: https://nodejs.org/
+   LTS (Long Term Support) suresunu secin
+
+3. MongoDB 6.0+
+   Indirin: https://www.mongodb.com/try/download/community
+   Windows Service olarak kurun
+
+4. Tesseract OCR
+   Indirin: https://github.com/UB-Mannheim/tesseract/wiki
+   ONEMLI: Kurulumda "Turkish" dil paketini secin!
+
+
+ADIM 2: SISTEMI TEST EDIN
+==========================
+
+1. Dosyalari indirdiginiz klasore gidin
+2. "test_system.bat" dosyasina cift tiklayin
+3. Tum gereksinimlerin [OK] oldugunu kontrol edin
+
+
+ADIM 3: KURULUM
+================
+
+1. "install.bat" dosyasina cift tiklayin
+2. Bagimliliklarin kurulmasini bekleyin (5-10 dakika)
+3. Kurulum tamamlandiginda "KURULUM TAMAMLANDI!" mesajini goreceksiniz
+
+
+ADIM 4: SISTEMI BASLATIN
+=========================
+
+1. MongoDB'nin calistigini kontrol edin:
+   Komut satirinda: net start MongoDB
+
+2. "start.bat" dosyasina cift tiklayin
+
+3. 2 adet terminal penceresi acilacak:
+   - Backend (Python)
+   - Frontend (Node.js)
+
+4. Tarayicinizda otomatik olarak acilacak:
+   http://localhost:3000
+
+
+SORUN GIDERME
+=============
+
+Problem: Python bulunamadi
+Cozum: Python'u yukleyin ve "Add to PATH" secenegini isaretleyin
+       Bilgisayari yeniden baslatin
+
+Problem: MongoDB baglanamadi
+Cozum: MongoDB servisini baslatin
+       Komut satiri: net start MongoDB
+
+Problem: Tesseract bulunamadi
+Cozum: PATH'e ekleyin
+       set PATH=%PATH%;C:\Program Files\Tesseract-OCR
+
+Problem: Kamera baglanamadi
+Cozum: - Webcam icin URL: 0 yazin
+       - Kameranin baska program tarafindan kullanilmadigini kontrol edin
+
+
+KULLANIM
+========
+
+1. Site Tanimlama -> Sitenizi, bloklarinizi ve dairelerinizi tanimlayin
+2. Kapi Yonetimi -> NodeMCU cihazlarinizi ekleyin
+3. Kamera Yonetimi -> Kameralarinizi ekleyin ve yapilandirin
+4. Plaka Yonetimi -> Arac plakalarini kaydedin
+5. Ana Ekran -> Kameralari baslatin ve canli izleme yapin
+
+
+DESTEK
+======
+
+- README_KURULUM.md dosyasina bakin
+- GitHub Issues
+- Email: support@example.com
+
+
+================================================
