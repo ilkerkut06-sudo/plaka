@@ -1,51 +1,37 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+import Dashboard from "@/pages/Dashboard";
+import SiteManagement from "@/pages/SiteManagement";
+import PlateManagement from "@/pages/PlateManagement";
+import CameraManagement from "@/pages/CameraManagement";
+import DoorManagement from "@/pages/DoorManagement";
+import Reports from "@/pages/Reports";
+import SettingsPage from "@/pages/SettingsPage";
+import Sidebar from "@/components/Sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <div className="App">
+      <Toaster position="top-right" />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <div className="flex h-screen bg-zinc-950 text-zinc-100">
+          <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+          <main className="flex-1 overflow-auto">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/sites" element={<SiteManagement />} />
+              <Route path="/plates" element={<PlateManagement />} />
+              <Route path="/cameras" element={<CameraManagement />} />
+              <Route path="/doors" element={<DoorManagement />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </main>
+        </div>
       </BrowserRouter>
     </div>
   );
