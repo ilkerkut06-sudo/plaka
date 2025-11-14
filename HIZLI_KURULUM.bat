@@ -18,10 +18,10 @@ if not exist venv (
 )
 
 echo pip guncelleniyor...
-venv\Scripts\pip.exe install --upgrade pip
+venv\Scripts\python.exe -m pip install --upgrade pip
 
 echo Backend paketleri kuruluyor...
-venv\Scripts\pip.exe install -r requirements.txt
+venv\Scripts\python.exe -m pip install -r requirements.txt
 
 if errorlevel 1 (
     echo HATA: Backend kurulumu basarisiz!
