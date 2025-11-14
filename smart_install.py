@@ -328,7 +328,15 @@ class SmartInstaller:
         # npm install
         self.log("Node paketleri kuruluyor (bu biraz zaman alabilir)...", "INFO")
         os.chdir(frontend_path)
+        
+        # İlk önce normal dene
         success, stdout, stderr = self.run_command("npm install")
+        
+        # Başarısız olursa legacy-peer-deps ile dene
+        if not success and "ERESOLVE" in stderr:
+            self.log("Bağımlılık uyumsuzluğu tespit edildi, --legacy-peer-deps ile yeniden deneniyor...", "FIX")
+            success, stdout, stderr = self.run_command("npm install --legacy-peer-deps")
+        
         os.chdir("..")
         
         if not success:
