@@ -1,17 +1,15 @@
 @echo off
-chcp 65001 >nul
 color 0A
 cls
 
 echo.
-echo ═══════════════════════════════════════════════════════════
-echo   PLAKA TANIMA SISTEMI - TEK TIK KURULUM
-echo ═══════════════════════════════════════════════════════════
+echo ================================================
+echo   PLAKA TANIMA - ONE CLICK SETUP
+echo ================================================
 echo.
-echo   Bu script her seyi otomatik yapacak.
-echo   Sadece bekleyin ve hata olursa bildirin.
+echo   Please wait 10-15 minutes...
 echo.
-echo ═══════════════════════════════════════════════════════════
+echo ================================================
 echo.
 pause
 
