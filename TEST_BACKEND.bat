@@ -93,7 +93,13 @@ pause
 echo.
 echo ================================================
 color 0A
-venv\Scripts\python.exe server.py
+echo BASLATILIYOR...
+echo.
+venv\Scripts\python.exe -u server.py
+echo.
+echo ================================================
+echo Backend kapandi!
+echo Yukarida hata var mi kontrol edin.
 echo ================================================
 echo.
 pause
