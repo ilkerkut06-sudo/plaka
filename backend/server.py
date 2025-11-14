@@ -136,8 +136,27 @@ class PlateRecognitionEngine:
     def __init__(self):
         self.current_engine = "yolov8_tesseract"
         self.compute_mode = "cpu"
-        # Placeholder for actual models
+        self.yolo_model = None
         self.initialized = False
+        self.last_detection_time = 0
+        self.detection_cooldown = 1.0  # 1 second between detections
+    
+    def initialize(self):
+        """Initialize YOLOv8 model"""
+        if self.initialized:
+            return
+        
+        try:
+            from ultralytics import YOLO
+            import pytesseract
+            
+            # Load YOLOv8n (nano) model - fastest for real-time
+            self.yolo_model = YOLO('yolov8n.pt')
+            self.initialized = True
+            logger.info("YOLOv8 model initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize YOLOv8: {e}")
+            self.initialized = False
     
     def set_engine(self, engine: str):
         self.current_engine = engine
@@ -145,19 +164,113 @@ class PlateRecognitionEngine:
     def set_compute_mode(self, mode: str):
         self.compute_mode = mode
     
+    def ocr_with_tesseract(self, plate_img: np.ndarray) -> Optional[str]:
+        """OCR using Tesseract"""
+        try:
+            import pytesseract
+            from PIL import Image
+            
+            # Preprocess plate image
+            gray = cv2.cvtColor(plate_img, cv2.COLOR_BGR2GRAY)
+            
+            # Apply thresholding
+            _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            
+            # Resize for better OCR
+            h, w = thresh.shape
+            if h < 50:
+                scale = 50 / h
+                thresh = cv2.resize(thresh, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+            
+            # OCR with Turkish language support
+            text = pytesseract.image_to_string(
+                Image.fromarray(thresh),
+                config='--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                lang='tur+eng'
+            )
+            
+            # Clean text
+            text = ''.join(c for c in text if c.isalnum()).upper()
+            
+            # Turkish plate format: 2 digits + 1-3 letters + 2-4 digits
+            # Example: 34ABC123, 06XYZ9999
+            if len(text) >= 5 and text[:2].isdigit():
+                return text
+            
+            return None
+        except Exception as e:
+            logger.error(f"Tesseract OCR error: {e}")
+            return None
+    
     async def detect_plate(self, frame: np.ndarray) -> Optional[Dict[str, Any]]:
-        """Mock detection for demo - returns sample plate"""
-        # In production, this would use YOLOv8 + OCR
-        # For now, return mock data occasionally
-        import random
-        if random.random() > 0.95:  # 5% chance to detect
-            sample_plates = ["34ABC123", "06DEF456", "41GHI789", "35JKL012"]
-            return {
-                "plate": random.choice(sample_plates),
-                "confidence": random.uniform(0.7, 0.95),
-                "bbox": [100, 100, 200, 150]
-            }
-        return None
+        """Real plate detection using YOLOv8 + OCR"""
+        import time
+        
+        # Cooldown check
+        current_time = time.time()
+        if current_time - self.last_detection_time < self.detection_cooldown:
+            return None
+        
+        if not self.initialized:
+            self.initialize()
+            if not self.initialized:
+                return None
+        
+        try:
+            # Run YOLOv8 detection
+            results = self.yolo_model(frame, verbose=False)
+            
+            for result in results:
+                boxes = result.boxes
+                for box in boxes:
+                    # Look for cars (class 2 in COCO dataset)
+                    cls = int(box.cls[0])
+                    conf = float(box.conf[0])
+                    
+                    if cls == 2 and conf > 0.5:  # Car detected with good confidence
+                        # Get bounding box
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        
+                        # Ensure valid coordinates
+                        x1, y1 = max(0, x1), max(0, y1)
+                        x2, y2 = min(frame.shape[1], x2), min(frame.shape[0], y2)
+                        
+                        # Extract car region
+                        car_region = frame[y1:y2, x1:x2]
+                        
+                        if car_region.size == 0:
+                            continue
+                        
+                        # Look for plate in lower 40% of car (where plates usually are)
+                        h, w = car_region.shape[:2]
+                        plate_search_region = car_region[int(h*0.6):h, :]
+                        
+                        if plate_search_region.size == 0:
+                            continue
+                        
+                        # Try OCR on the region
+                        plate_text = None
+                        
+                        if self.current_engine == "yolov8_tesseract":
+                            plate_text = self.ocr_with_tesseract(plate_search_region)
+                        
+                        if plate_text and len(plate_text) >= 5:
+                            self.last_detection_time = current_time
+                            
+                            # Calculate plate bbox in original frame
+                            plate_y1 = y1 + int(h*0.6)
+                            
+                            return {
+                                "plate": plate_text,
+                                "confidence": conf,
+                                "bbox": [x1, plate_y1, x2, y2]
+                            }
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Plate detection error: {e}")
+            return None
 
 plate_engine = PlateRecognitionEngine()
 
