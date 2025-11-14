@@ -107,7 +107,9 @@ echo.
 echo Backend uvicorn ile baslatiliyor (Port: 8001)...
 echo Durdurmak icin: Ctrl+C
 echo.
-venv\Scripts\python.exe -m uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+REM Activate venv and run uvicorn
+call venv\Scripts\activate.bat
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 echo.
 echo ================================================
 echo Backend kapandi!
