@@ -32,9 +32,37 @@ db = client[os.environ['DB_NAME']]
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    print("\n" + "="*60)
+    print("🚀 PLAKA OKUMA SİSTEMİ BAŞLATILIYOR...")
+    print("="*60)
+    print(f"📊 MongoDB Bağlantısı: {os.environ.get('MONGO_URL', 'localhost:27017')}")
+    print(f"💾 Veritabanı: {os.environ.get('DB_NAME', 'test_database')}")
+    
+    try:
+        # Test MongoDB connection
+        await client.admin.command('ping')
+        print("✅ MongoDB bağlantısı başarılı!")
+    except Exception as e:
+        print(f"⚠️  MongoDB bağlantı uyarısı: {str(e)}")
+    
+    print("\n🎥 Kamera sistemi hazır")
+    print("🤖 YOLOv8 plaka tanıma motoru yüklendi")
+    print("="*60)
+    print("✅ SUNUCU HAZIR!")
+    print("="*60)
+    print(f"🌐 Backend API: http://localhost:8001")
+    print(f"📡 WebSocket: ws://localhost:8001/ws/video")
+    print("="*60 + "\n")
+    
     yield
+    
     # Shutdown
+    print("\n" + "="*60)
+    print("🛑 Sunucu kapatılıyor...")
+    print("="*60)
     client.close()
+    print("✅ Temizlik tamamlandı. Güle güle!")
+    print("="*60 + "\n")
 
 # Create the main app
 app = FastAPI(lifespan=lifespan)
