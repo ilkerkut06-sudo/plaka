@@ -325,25 +325,38 @@ class SmartInstaller:
             self.errors.append("package.json yok")
             return False
         
-        # npm install
-        self.log("Node paketleri kuruluyor (bu biraz zaman alabilir)...", "INFO")
         os.chdir(frontend_path)
         
-        # İlk önce normal dene
-        success, stdout, stderr = self.run_command("npm install")
+        # node_modules varsa temizle
+        node_modules = Path("node_modules")
+        if node_modules.exists():
+            self.log("Eski node_modules temizleniyor...", "INFO")
+            import shutil
+            shutil.rmtree(node_modules, ignore_errors=True)
         
-        # Başarısız olursa legacy-peer-deps ile dene
-        if not success and "ERESOLVE" in stderr:
-            self.log("Bağımlılık uyumsuzluğu tespit edildi, --legacy-peer-deps ile yeniden deneniyor...", "FIX")
-            success, stdout, stderr = self.run_command("npm install --legacy-peer-deps")
+        # npm cache temizle
+        self.log("npm cache temizleniyor...", "INFO")
+        self.run_command("npm cache clean --force")
         
-        os.chdir("..")
+        # npm install
+        self.log("Node paketleri kuruluyor (bu biraz zaman alabilir)...", "INFO")
+        
+        # İlk önce legacy-peer-deps ile kur (daha güvenli)
+        success, stdout, stderr = self.run_command("npm install --legacy-peer-deps")
         
         if not success:
             self.log(f"npm install hatası: {stderr}", "ERROR")
+            os.chdir("..")
             self.errors.append("Frontend paket kurulum hatası")
             return False
         
+        # ajv kontrolü
+        ajv_path = Path("node_modules/ajv")
+        if not ajv_path.exists():
+            self.log("ajv paketi eksik, yeniden kuruluyor...", "FIX")
+            self.run_command("npm install ajv@8 --legacy-peer-deps")
+        
+        os.chdir("..")
         self.log("Frontend paketleri kuruldu", "SUCCESS")
         return True
     
