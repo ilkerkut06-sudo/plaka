@@ -100,7 +100,7 @@ if exist venv (
 
 :: Create venv
 echo   Creating virtual environment...
-python -m venv venv
+%PYTHON_CMD% -m venv venv
 if errorlevel 1 (
     color 0C
     echo.
