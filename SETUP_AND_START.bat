@@ -169,6 +169,10 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: Install ajv separately (fixes missing module error)
+echo   Installing ajv package...
+call npm install ajv@8 --legacy-peer-deps --silent
+
 echo   [OK] Frontend setup complete
 
 :: Create .env
