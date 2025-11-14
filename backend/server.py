@@ -754,10 +754,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Configure logging to show in console
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()  # Ensure logs go to console
+    ]
 )
 logger = logging.getLogger(__name__)
+
+# Log configuration
+logger.info("🔧 Logging sistemi yapılandırıldı")
 
 # Duplicate app definition removed
