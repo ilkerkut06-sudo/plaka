@@ -172,6 +172,21 @@ class SmartInstaller:
         if success:
             version = stdout.strip()
             self.log(f"Node.js bulundu: {version}", "SUCCESS")
+            
+            # Version kontrolü (v18 veya v20+ olmalı)
+            try:
+                major_version = int(version.replace('v', '').split('.')[0])
+                if major_version < 18:
+                    self.log(f"UYARI: Node.js {version} çok eski!", "WARNING")
+                    self.log("Node.js 18 veya 20+ sürümüne yükseltmeniz önerilir", "WARNING")
+                    self.warnings.append("Node.js versiyonu eski (18+ önerilir)")
+                elif major_version == 18:
+                    self.log("Node.js 18 kullanılıyor (uyumlu)", "SUCCESS")
+                else:
+                    self.log(f"Node.js {major_version} kullanılıyor (en güncel)", "SUCCESS")
+            except:
+                pass
+            
             return True
         
         return False
