@@ -308,6 +308,11 @@ async def process_camera_stream(camera_id: str, camera_data: Dict[str, Any]):
         except Exception as e:
             logger.error(f"Camera {camera_id} error: {e}")
             await asyncio.sleep(1)
+    
+    # Cleanup
+    if cap:
+        cap.release()
+    logger.info(f"Camera {camera_id} stream stopped")
 
 # ==================== API ROUTES ====================
 
