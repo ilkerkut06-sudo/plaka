@@ -1,0 +1,122 @@
+================================================
+  PLAKA TANIMA SISTEMI - HIZLI BASLANGIC
+  Evo Teknoloji
+================================================
+
+ADIM 1: GEREKSINIMLERI YUKLEYIN
+================================
+
+Sistemi kurmadan once asagidaki programlari yukleyin:
+
+1. Python 3.9 veya uzeri
+   https://www.python.org/downloads/
+   ONEMLI: "Add Python to PATH" isaretleyin!
+
+2. Node.js 18 veya uzeri (LTS)
+   https://nodejs.org/
+
+3. MongoDB 6.0 veya uzeri
+   https://www.mongodb.com/try/download/community
+   Windows Service olarak kurun
+
+4. Tesseract OCR
+   https://github.com/UB-Mannheim/tesseract/wiki
+   ONEMLI: "Turkish" dil paketini secin!
+
+
+ADIM 2: OTOMATIK KURULUM
+=========================
+
+1. KURULUM.bat dosyasina CIFT TIKLAYIN
+
+2. Sistem otomatik olarak:
+   - Tum bile\u015fenleri kontrol edecek
+   - PATH sorunlarini duzeltecek
+   - Python paketlerini kuracak
+   - Node.js paketlerini kuracak
+   - Environment dosyalarini olusturacak
+   - Baslatma scriptini hazirlayacak
+
+3. Kurulum tamamlandiginda "BASLA.bat" olusacak
+
+
+ADIM 3: SISTEMI BASLATIN
+=========================
+
+1. BASLA.bat dosyasina CIFT TIKLAYIN
+
+2. 2 terminal penceresi acilacak:
+   - Backend (Python/FastAPI)
+   - Frontend (React)
+
+3. Tarayiciniz otomatik acilacak
+   http://localhost:3000
+
+
+SORUN MU YASIYORSUNUZ?
+======================
+
+1. kurulum_log.txt dosyasini acin
+   (Tum kurulum adimlari burada)
+
+2. Hata mesajlarini okuyun
+
+3. PATH sorunlari icin:
+   - Bilgisayari yeniden baslatin
+   - setup_path.bat'i yonetici olarak calistirin
+
+4. Paket kurulum hatalari icin:
+   - Internet baglantinizi kontrol edin
+   - Guvenlik duvari ayarlarini kontrol edin
+
+
+MANUEL KURULUM GEREKIYORSA
+===========================
+
+Eger otomatik kurulum calismiyorsa:
+
+1. Backend:
+   cd backend
+   python -m venv venv
+   venv\Scripts\pip install -r requirements.txt
+
+2. Frontend:
+   cd frontend
+   npm install
+
+3. Ortam degiskenleri:
+   backend\.env ve frontend\.env olusturun
+   (.env.example'lara bakin)
+
+4. Baslatma:
+   BASLA_ORNEK.bat'i kullanin
+
+
+SISTEM GEREKSINIMLERI
+======================
+
+Minimum:
+- CPU: Intel Core i5 / AMD Ryzen 5
+- RAM: 8 GB
+- Disk: 5 GB bos alan
+- Internet: Kurulum icin gerekli
+
+Onerilen:
+- CPU: Intel Core i7 / AMD Ryzen 7
+- RAM: 16 GB
+- GPU: NVIDIA GTX 1060+ (CUDA)
+- Disk: 10 GB SSD
+
+
+DESTEK
+======
+
+Sorun yasiyorsaniz:
+1. kurulum_log.txt'yi inceleyin
+2. README_KURULUM.md'yi okuyun
+3. GitHub Issues'da bildirim yapin
+
+
+================================================
+Basarilar dileriz!
+================================================
