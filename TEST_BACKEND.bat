@@ -1,8 +1,17 @@
 @echo off
-color 0B
-echo ================================================
-echo   BACKEND TEST
-echo ================================================
+chcp 65001 >nul
+color 0E
+cls
+
+REM Get the directory where this script is located
+set SCRIPT_DIR=%~dp0
+cd /d "%SCRIPT_DIR%"
+
+echo ============================================================
+echo   🧪 BACKEND TEST ARACI
+echo ============================================================
+echo.
+echo 📂 Test dizini: %CD%
 echo.
 
 cd backend
