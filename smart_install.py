@@ -58,7 +58,7 @@ class SmartInstaller:
             import ctypes
             return ctypes.windll.shell32.IsUserAnAdmin() != 0
     
-    def run_command(self, cmd, shell=True, check=False):
+    def run_command(self, cmd, shell=True, check=False, timeout=300):
         """Komut çalıştır ve sonucu döndür"""
         try:
             result = subprocess.run(
@@ -66,9 +66,11 @@ class SmartInstaller:
                 shell=shell,
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=timeout
             )
             return result.returncode == 0, result.stdout, result.stderr
+        except subprocess.TimeoutExpired:
+            return False, "", f"Command '{cmd}' timed out after {timeout} seconds"
         except Exception as e:
             return False, "", str(e)
     
