@@ -169,25 +169,65 @@ async def process_camera_stream(camera_id: str, camera_data: Dict[str, Any]):
     camera_type = camera_data["type"]
     fps = camera_data.get("fps", 15)
     
-    # Demo mode: generate test frames
+    # Try to open real camera
+    cap = None
     frame_count = 0
+    is_demo_mode = False
+    
+    try:
+        if camera_type == "webcam":
+            # Try to parse as int for webcam index
+            try:
+                cam_index = int(camera_url)
+                cap = cv2.VideoCapture(cam_index)
+            except:
+                cap = cv2.VideoCapture(camera_url)
+        elif camera_type in ["rtsp", "http"]:
+            cap = cv2.VideoCapture(camera_url)
+        
+        if cap and cap.isOpened():
+            logger.info(f"Camera {camera_id} connected successfully")
+        else:
+            logger.warning(f"Camera {camera_id} connection failed, using demo mode")
+            is_demo_mode = True
+            if cap:
+                cap.release()
+            cap = None
+    except Exception as e:
+        logger.error(f"Camera {camera_id} error during initialization: {e}")
+        is_demo_mode = True
+        cap = None
     
     while camera_id in active_cameras:
         try:
-            # Create a test frame (colored rectangle with camera info)
-            frame = np.zeros((480, 640, 3), dtype=np.uint8)
-            color = (
-                hash(camera_id) % 100 + 50,
-                (hash(camera_id) * 2) % 100 + 50,
-                (hash(camera_id) * 3) % 100 + 50
-            )
-            frame[:] = color
+            # Try to read from real camera
+            if cap and cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    logger.error(f"Camera {camera_id} failed to read frame, switching to demo mode")
+                    is_demo_mode = True
+                    cap.release()
+                    cap = None
             
-            # Add text
-            cv2.putText(frame, f"Camera: {camera_data['name']}", (10, 30),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-            cv2.putText(frame, f"Frame: {frame_count}", (10, 60),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            # Demo mode fallback
+            if is_demo_mode or cap is None:
+                frame = np.zeros((480, 640, 3), dtype=np.uint8)
+                color = (
+                    hash(camera_id) % 100 + 50,
+                    (hash(camera_id) * 2) % 100 + 50,
+                    (hash(camera_id) * 3) % 100 + 50
+                )
+                frame[:] = color
+                cv2.putText(frame, f"DEMO MODE - {camera_data['name']}", (10, 30),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.putText(frame, f"Camera not accessible", (10, 60),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                cv2.putText(frame, f"URL: {camera_url}", (10, 90),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, (200, 200, 200), 1)
+            
+            # Resize frame if needed
+            if frame is not None and frame.shape[0] > 0:
+                frame = cv2.resize(frame, (640, 480))
             
             # Attempt plate detection
             detection_result = await plate_engine.detect_plate(frame)
