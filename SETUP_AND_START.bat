@@ -192,8 +192,7 @@ echo.
 :: Backend start script
 echo @echo off > START_BACKEND.bat
 echo cd backend >> START_BACKEND.bat
-echo call venv\Scripts\activate >> START_BACKEND.bat
-echo python server.py >> START_BACKEND.bat
+echo venv\Scripts\python.exe server.py >> START_BACKEND.bat
 echo pause >> START_BACKEND.bat
 
 :: Frontend start script
