@@ -104,7 +104,10 @@ echo ================================================
 color 0A
 echo BASLATILIYOR...
 echo.
-venv\Scripts\python.exe -u server.py
+echo Backend uvicorn ile baslatiliyor (Port: 8001)...
+echo Durdurmak icin: Ctrl+C
+echo.
+venv\Scripts\python.exe -m uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 echo.
 echo ================================================
 echo Backend kapandi!
