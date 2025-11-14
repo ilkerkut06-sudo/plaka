@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from contextlib import asynccontextmanager
 import os
 import logging
 from pathlib import Path
@@ -27,8 +28,16 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Lifespan event handler
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    yield
+    # Shutdown
+    client.close()
+
 # Create the main app
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 api_router = APIRouter(prefix="/api")
 
 # ==================== MODELS ====================
