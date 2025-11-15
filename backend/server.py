@@ -187,10 +187,11 @@ class PlateRecognitionEngine:
             from ultralytics import YOLO
             import pytesseract
             
-            # Load YOLOv8n (nano) model - fastest for real-time
-            self.yolo_model = YOLO('yolov8n.pt')
+            # Load custom license plate detection model
+            model_path = ROOT_DIR / 'best.pt'
+            self.yolo_model = YOLO(model_path)
             self.initialized = True
-            logger.info("YOLOv8 model initialized successfully")
+            logger.info(f"YOLOv8 custom plate model loaded from {model_path}")
         except Exception as e:
             logger.error(f"Failed to initialize YOLOv8: {e}")
             self.initialized = False
@@ -240,71 +241,57 @@ class PlateRecognitionEngine:
             return None
     
     async def detect_plate(self, frame: np.ndarray) -> Optional[Dict[str, Any]]:
-        """Real plate detection using YOLOv8 + OCR"""
+        """Detect license plates directly using a custom YOLOv8 model and OCR."""
         import time
         
-        # Cooldown check
         current_time = time.time()
         if current_time - self.last_detection_time < self.detection_cooldown:
             return None
-        
+
         if not self.initialized:
             self.initialize()
             if not self.initialized:
                 return None
-        
+
         try:
-            # Run YOLOv8 detection
-            results = self.yolo_model(frame, verbose=False)
+            # Run YOLOv8 detection for license plates
+            results = self.yolo_model(frame, verbose=False, conf=0.6)
             
+            best_detection = None
+            max_conf = 0
+
+            # Find the best detection based on confidence
             for result in results:
-                boxes = result.boxes
-                for box in boxes:
-                    # Look for cars (class 2 in COCO dataset)
-                    cls = int(box.cls[0])
+                for box in result.boxes:
                     conf = float(box.conf[0])
+                    if conf > max_conf:
+                        max_conf = conf
+                        best_detection = box
+
+            if best_detection:
+                x1, y1, x2, y2 = map(int, best_detection.xyxy[0])
+
+                # Ensure coordinates are valid
+                x1, y1 = max(0, x1), max(0, y1)
+                x2, y2 = min(frame.shape[1], x2), min(frame.shape[0], y2)
+
+                # Crop the plate region
+                plate_region = frame[y1:y2, x1:x2]
+
+                if plate_region.size > 0:
+                    # Perform OCR on the cropped plate
+                    plate_text = self.ocr_with_tesseract(plate_region)
                     
-                    if cls == 2 and conf > 0.5:  # Car detected with good confidence
-                        # Get bounding box
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
-                        
-                        # Ensure valid coordinates
-                        x1, y1 = max(0, x1), max(0, y1)
-                        x2, y2 = min(frame.shape[1], x2), min(frame.shape[0], y2)
-                        
-                        # Extract car region
-                        car_region = frame[y1:y2, x1:x2]
-                        
-                        if car_region.size == 0:
-                            continue
-                        
-                        # Look for plate in lower 40% of car (where plates usually are)
-                        h, w = car_region.shape[:2]
-                        plate_search_region = car_region[int(h*0.6):h, :]
-                        
-                        if plate_search_region.size == 0:
-                            continue
-                        
-                        # Try OCR on the region
-                        plate_text = None
-                        
-                        if self.current_engine == "yolov8_tesseract":
-                            plate_text = self.ocr_with_tesseract(plate_search_region)
-                        
-                        if plate_text and len(plate_text) >= 5:
-                            self.last_detection_time = current_time
-                            
-                            # Calculate plate bbox in original frame
-                            plate_y1 = y1 + int(h*0.6)
-                            
-                            return {
-                                "plate": plate_text,
-                                "confidence": conf,
-                                "bbox": [x1, plate_y1, x2, y2]
-                            }
+                    if plate_text and len(plate_text) >= 5:
+                        self.last_detection_time = current_time
+                        return {
+                            "plate": plate_text,
+                            "confidence": max_conf,
+                            "bbox": [x1, y1, x2, y2]
+                        }
             
             return None
-            
+
         except Exception as e:
             logger.error(f"Plate detection error: {e}")
             return None
@@ -379,8 +366,10 @@ async def process_camera_stream(camera_id: str, camera_data: Dict[str, Any]):
             if frame is not None and frame.shape[0] > 0:
                 frame = cv2.resize(frame, (640, 480))
             
-            # Attempt plate detection
-            detection_result = await plate_engine.detect_plate(frame)
+            # Attempt plate detection (every 5th frame to save resources)
+            detection_result = None
+            if frame_count % 5 == 0:
+                detection_result = await plate_engine.detect_plate(frame)
             
             if detection_result:
                 plate_text = detection_result["plate"]
@@ -448,7 +437,7 @@ async def process_camera_stream(camera_id: str, camera_data: Dict[str, Any]):
                         pass
             
             # Store latest frame
-            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
+            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
             active_cameras[camera_id]["latest_frame"] = buffer.tobytes()
             active_cameras[camera_id]["status"] = status if detection_result else "monitoring"
             
