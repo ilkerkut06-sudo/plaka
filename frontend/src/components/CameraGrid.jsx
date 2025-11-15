@@ -12,22 +12,47 @@ const CameraBox = ({ camera, position }) => {
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState("stopped");
 
-  const toggleCamera = async () => {
+  const startCamera = async () => {
+    // Prevent starting if already active
+    if (isActive) return;
     try {
-      if (isActive) {
-        await axios.post(`${API}/cameras/${camera.id}/stop`);
-        setIsActive(false);
-        setStatus("stopped");
-        toast.success("Kamera durduruldu");
-      } else {
-        await axios.post(`${API}/cameras/${camera.id}/start`);
-        setIsActive(true);
-        setStatus("monitoring");
-        toast.success("Kamera başlatıldı");
-      }
+      await axios.post(`${API}/cameras/${camera.id}/start`);
+      setIsActive(true);
+      setStatus("monitoring");
+      toast.success(`${camera.name} başlatıldı`);
     } catch (error) {
-      toast.error("Kamera kontrolü başarısız");
+      toast.error(`${camera.name} başlatılamadı`);
       console.error(error);
+    }
+  };
+
+  const stopCamera = async () => {
+    // Prevent stopping if already stopped
+    if (!isActive) return;
+    try {
+      await axios.post(`${API}/cameras/${camera.id}/stop`);
+      setIsActive(false);
+      setStatus("stopped");
+      toast.info(`${camera.name} durduruldu`);
+    } catch (error) {
+      toast.error(`${camera.name} durdurulamadı`);
+      console.error(error);
+    }
+  };
+
+  // Auto-start camera when component mounts with a valid camera prop
+  useEffect(() => {
+    if (camera && !isActive) {
+      startCamera();
+    }
+    // No cleanup function to stop camera on unmount, so it stays active
+  }, [camera]); // Dependency array ensures this runs when camera prop is available
+
+  const toggleCamera = () => {
+    if (isActive) {
+      stopCamera();
+    } else {
+      startCamera();
     }
   };
 
