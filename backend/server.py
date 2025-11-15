@@ -19,6 +19,7 @@ import numpy as np
 from collections import deque
 import requests
 import base64
+import re
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -35,11 +36,15 @@ async def lifespan(app: FastAPI):
     print("\n" + "="*60)
     print("🚀 PLAKA OKUMA SİSTEMİ BAŞLATILIYOR...")
     print("="*60)
+
+    # Start the single result broadcaster task
+    asyncio.create_task(result_broadcaster())
+    logger.info("Result broadcaster task started.")
+
     print(f"📊 MongoDB Bağlantısı: {os.environ.get('MONGO_URL', 'localhost:27017')}")
     print(f"💾 Veritabanı: {os.environ.get('DB_NAME', 'test_database')}")
     
     try:
-        # Test MongoDB connection
         await client.admin.command('ping')
         print("✅ MongoDB bağlantısı başarılı!")
     except Exception as e:
@@ -51,7 +56,7 @@ async def lifespan(app: FastAPI):
     print("✅ SUNUCU HAZIR!")
     print("="*60)
     print(f"🌐 Backend API: http://localhost:8001")
-    print(f"📡 WebSocket: ws://localhost:8001/ws/video")
+    print(f"📡 WebSocket: ws://localhost:8001/ws/detections")
     print("="*60 + "\n")
     
     yield
@@ -60,6 +65,7 @@ async def lifespan(app: FastAPI):
     print("\n" + "="*60)
     print("🛑 Sunucu kapatılıyor...")
     print("="*60)
+    active_cameras.clear() # Signal all tasks to stop
     client.close()
     print("✅ Temizlik tamamlandı. Güle güle!")
     print("="*60 + "\n")
@@ -167,6 +173,10 @@ active_cameras: Dict[str, Any] = {}
 websocket_clients: List[WebSocket] = []
 detection_buffer = deque(maxlen=20)
 
+# Queues for parallel processing
+frame_queues: Dict[str, asyncio.Queue] = {}
+results_queue = asyncio.Queue()
+
 # ==================== PLATE RECOGNITION ENGINE ====================
 
 class PlateRecognitionEngine:
@@ -187,10 +197,11 @@ class PlateRecognitionEngine:
             from ultralytics import YOLO
             import pytesseract
             
-            # Load YOLOv8n (nano) model - fastest for real-time
-            self.yolo_model = YOLO('yolov8n.pt')
+            # Load custom license plate detection model
+            model_path = ROOT_DIR / 'best.pt'
+            self.yolo_model = YOLO(model_path)
             self.initialized = True
-            logger.info("YOLOv8 model initialized successfully")
+            logger.info(f"YOLOv8 custom plate model loaded from {model_path}")
         except Exception as e:
             logger.error(f"Failed to initialize YOLOv8: {e}")
             self.initialized = False
@@ -202,36 +213,34 @@ class PlateRecognitionEngine:
         self.compute_mode = mode
     
     def ocr_with_tesseract(self, plate_img: np.ndarray) -> Optional[str]:
-        """OCR using Tesseract"""
+        """OCR using Tesseract with simplified, robust preprocessing."""
         try:
             import pytesseract
             from PIL import Image
-            
-            # Preprocess plate image
+
+            # 1. Convert to grayscale
             gray = cv2.cvtColor(plate_img, cv2.COLOR_BGR2GRAY)
-            
-            # Apply thresholding
+
+            # 2. Resize for better OCR performance and consistency
+            # A fixed height helps Tesseract's character size detection
+            gray = cv2.resize(gray, None, fx=2.5, fy=2.5, interpolation=cv2.INTER_CUBIC)
+
+            # 3. Apply a standard binary threshold
+            # This is often more reliable than adaptive thresholding on noisy small images
             _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            
-            # Resize for better OCR
-            h, w = thresh.shape
-            if h < 50:
-                scale = 50 / h
-                thresh = cv2.resize(thresh, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
-            
-            # OCR with Turkish language support
+
+            # 4. Perform OCR
             text = pytesseract.image_to_string(
                 Image.fromarray(thresh),
                 config='--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                 lang='tur+eng'
             )
             
-            # Clean text
+            # 5. Basic cleaning
             text = ''.join(c for c in text if c.isalnum()).upper()
             
-            # Turkish plate format: 2 digits + 1-3 letters + 2-4 digits
-            # Example: 34ABC123, 06XYZ9999
-            if len(text) >= 5 and text[:2].isdigit():
+            # Return raw but clean text if it looks like a plate
+            if len(text) >= 5:
                 return text
             
             return None
@@ -240,229 +249,172 @@ class PlateRecognitionEngine:
             return None
     
     async def detect_plate(self, frame: np.ndarray) -> Optional[Dict[str, Any]]:
-        """Real plate detection using YOLOv8 + OCR"""
+        """Detect license plates directly using a custom YOLOv8 model and OCR."""
         import time
         
-        # Cooldown check
         current_time = time.time()
         if current_time - self.last_detection_time < self.detection_cooldown:
             return None
-        
+
         if not self.initialized:
             self.initialize()
             if not self.initialized:
                 return None
-        
+
         try:
-            # Run YOLOv8 detection
-            results = self.yolo_model(frame, verbose=False)
+            # Run YOLOv8 detection for license plates
+            results = self.yolo_model(frame, verbose=False, conf=0.4)
             
+            best_detection = None
+            max_conf = 0
+
+            # Find the best detection based on confidence
             for result in results:
-                boxes = result.boxes
-                for box in boxes:
-                    # Look for cars (class 2 in COCO dataset)
-                    cls = int(box.cls[0])
+                for box in result.boxes:
                     conf = float(box.conf[0])
+                    if conf > max_conf:
+                        max_conf = conf
+                        best_detection = box
+
+            if best_detection:
+                x1, y1, x2, y2 = map(int, best_detection.xyxy[0])
+
+                # Ensure coordinates are valid
+                x1, y1 = max(0, x1), max(0, y1)
+                x2, y2 = min(frame.shape[1], x2), min(frame.shape[0], y2)
+
+                # Crop the plate region
+                plate_region = frame[y1:y2, x1:x2]
+
+                if plate_region.size > 0:
+                    # Perform OCR on the cropped plate
+                    plate_text = self.ocr_with_tesseract(plate_region)
                     
-                    if cls == 2 and conf > 0.5:  # Car detected with good confidence
-                        # Get bounding box
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
-                        
-                        # Ensure valid coordinates
-                        x1, y1 = max(0, x1), max(0, y1)
-                        x2, y2 = min(frame.shape[1], x2), min(frame.shape[0], y2)
-                        
-                        # Extract car region
-                        car_region = frame[y1:y2, x1:x2]
-                        
-                        if car_region.size == 0:
-                            continue
-                        
-                        # Look for plate in lower 40% of car (where plates usually are)
-                        h, w = car_region.shape[:2]
-                        plate_search_region = car_region[int(h*0.6):h, :]
-                        
-                        if plate_search_region.size == 0:
-                            continue
-                        
-                        # Try OCR on the region
-                        plate_text = None
-                        
-                        if self.current_engine == "yolov8_tesseract":
-                            plate_text = self.ocr_with_tesseract(plate_search_region)
-                        
-                        if plate_text and len(plate_text) >= 5:
-                            self.last_detection_time = current_time
-                            
-                            # Calculate plate bbox in original frame
-                            plate_y1 = y1 + int(h*0.6)
-                            
-                            return {
-                                "plate": plate_text,
-                                "confidence": conf,
-                                "bbox": [x1, plate_y1, x2, y2]
-                            }
+                    if plate_text and len(plate_text) >= 5:
+                        self.last_detection_time = current_time
+                        return {
+                            "plate": plate_text,
+                            "confidence": max_conf,
+                            "bbox": [x1, y1, x2, y2]
+                        }
             
             return None
-            
+
         except Exception as e:
             logger.error(f"Plate detection error: {e}")
             return None
 
 plate_engine = PlateRecognitionEngine()
 
-# ==================== CAMERA PROCESSING ====================
+# ==================== PARALLEL CAMERA PROCESSING ====================
 
-async def process_camera_stream(camera_id: str, camera_data: Dict[str, Any]):
-    """Process camera stream and detect plates"""
-    camera_url = camera_data["url"]
-    camera_type = camera_data["type"]
-    fps = camera_data.get("fps", 15)
-    
-    # Try to open real camera
+async def camera_reader(camera_id: str, camera_url: str, camera_type: str, fps: int):
+    """Reads frames from a camera and puts them into a queue."""
+    q = frame_queues.get(camera_id)
     cap = None
-    frame_count = 0
-    is_demo_mode = False
-    
     try:
         if camera_type == "webcam":
-            # Try to parse as int for webcam index
-            try:
-                cam_index = int(camera_url)
-                cap = cv2.VideoCapture(cam_index)
-            except:
-                cap = cv2.VideoCapture(camera_url)
-        elif camera_type in ["rtsp", "http"]:
+            cap = cv2.VideoCapture(int(camera_url))
+        else:
             cap = cv2.VideoCapture(camera_url)
         
-        if cap and cap.isOpened():
-            logger.info(f"Camera {camera_id} connected successfully")
-        else:
-            logger.warning(f"Camera {camera_id} connection failed, using demo mode")
-            is_demo_mode = True
-            if cap:
-                cap.release()
-            cap = None
+        if not cap.isOpened():
+            raise ConnectionError(f"Could not open camera {camera_id}")
+
+        logger.info(f"Camera reader started for {camera_id}")
+        while camera_id in active_cameras:
+            ret, frame = cap.read()
+            if not ret:
+                logger.warning(f"Failed to read frame from {camera_id}, retrying...")
+                await asyncio.sleep(1)
+                continue
+
+            # Resize once here
+            frame = cv2.resize(frame, (640, 480))
+
+            if q.full():
+                await q.get() # Discard oldest frame if queue is full
+            await q.put(frame)
+            await asyncio.sleep(1.0 / fps)
     except Exception as e:
-        logger.error(f"Camera {camera_id} error during initialization: {e}")
-        is_demo_mode = True
-        cap = None
-    
+        logger.error(f"Camera reader for {camera_id} failed: {e}")
+    finally:
+        if cap:
+            cap.release()
+        logger.info(f"Camera reader for {camera_id} stopped.")
+
+async def plate_processor(camera_id: str):
+    """Processes frames from a queue to detect plates."""
+    q = frame_queues.get(camera_id)
+    frame_count = 0
     while camera_id in active_cameras:
         try:
-            # Try to read from real camera
-            if cap and cap.isOpened():
-                ret, frame = cap.read()
-                if not ret:
-                    logger.error(f"Camera {camera_id} failed to read frame, switching to demo mode")
-                    is_demo_mode = True
-                    cap.release()
-                    cap = None
+            frame = await q.get()
             
-            # Demo mode fallback
-            if is_demo_mode or cap is None:
-                frame = np.zeros((480, 640, 3), dtype=np.uint8)
-                color = (
-                    hash(camera_id) % 100 + 50,
-                    (hash(camera_id) * 2) % 100 + 50,
-                    (hash(camera_id) * 3) % 100 + 50
-                )
-                frame[:] = color
-                cv2.putText(frame, f"DEMO MODE - {camera_data['name']}", (10, 30),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                cv2.putText(frame, f"Camera not accessible", (10, 60),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-                cv2.putText(frame, f"URL: {camera_url}", (10, 90),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, (200, 200, 200), 1)
-            
-            # Resize frame if needed
-            if frame is not None and frame.shape[0] > 0:
-                frame = cv2.resize(frame, (640, 480))
-            
-            # Attempt plate detection
-            detection_result = await plate_engine.detect_plate(frame)
-            
-            if detection_result:
-                plate_text = detection_result["plate"]
-                confidence = detection_result["confidence"]
-                
-                # Check if plate is registered
-                plate_record = await db.plates.find_one({
-                    "plates": plate_text
-                }, {"_id": 0})
-                
-                status = "unknown"
-                owner_info = None
-                
-                if plate_record:
-                    if plate_record["status"] == "blocked":
-                        status = "blocked"
-                    else:
-                        status = "allowed"
-                        # Trigger door opening
-                        camera_info = await db.cameras.find_one({"id": camera_id}, {"_id": 0})
-                        if camera_info:
-                            door_info = await db.doors.find_one({"id": camera_info["door_id"]}, {"_id": 0})
-                            if door_info:
-                                try:
-                                    requests.get(f"http://{door_info['ip']}{door_info['endpoint']}", timeout=2)
-                                except:
-                                    pass
-                    
-                    owner_info = {
-                        "owner_name": plate_record["owner_name"],
-                        "apartment": f"{plate_record['block_name']} - {plate_record['apartment_number']}"
-                    }
-                
-                # Draw detection on frame
-                bbox = detection_result["bbox"]
-                color_map = {"allowed": (0, 255, 0), "blocked": (0, 0, 255), "unknown": (0, 255, 255)}
-                cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color_map[status], 3)
-                cv2.putText(frame, plate_text, (bbox[0], bbox[1] - 10),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.9, color_map[status], 2)
-                
-                # Save detection
-                _, buffer = cv2.imencode('.jpg', frame)
-                img_base64 = base64.b64encode(buffer).decode('utf-8')
-                
-                detection = Detection(
-                    camera_id=camera_id,
-                    plate=plate_text,
-                    status=status,
-                    confidence=confidence,
-                    image_base64=img_base64,
-                    owner_info=owner_info
-                )
-                
-                await db.detections.insert_one(detection.model_dump())
-                detection_buffer.append(detection.model_dump())
-                
-                # Broadcast to websocket clients
-                for ws_client in websocket_clients:
-                    try:
-                        await ws_client.send_json({
-                            "type": "detection",
-                            "data": detection.model_dump()
-                        })
-                    except:
-                        pass
-            
-            # Store latest frame
-            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
-            active_cameras[camera_id]["latest_frame"] = buffer.tobytes()
-            active_cameras[camera_id]["status"] = status if detection_result else "monitoring"
+            # Process every 3rd frame
+            if frame_count % 3 == 0:
+                detection_result = await plate_engine.detect_plate(frame)
+                if detection_result:
+                    await results_queue.put((camera_id, frame, detection_result))
             
             frame_count += 1
-            await asyncio.sleep(1.0 / fps)
-            
         except Exception as e:
-            logger.error(f"Camera {camera_id} error: {e}")
-            await asyncio.sleep(1)
-    
-    # Cleanup
-    if cap:
-        cap.release()
-    logger.info(f"Camera {camera_id} stream stopped")
+            logger.error(f"Plate processor for {camera_id} error: {e}")
+
+async def result_broadcaster():
+    """Broadcasts detection results to WebSocket clients."""
+    while True:
+        try:
+            camera_id, frame, detection_result = await results_queue.get()
+            
+            plate_text = detection_result["plate"]
+            confidence = detection_result["confidence"]
+            plate_record = await db.plates.find_one({"plates": plate_text}, {"_id": 0})
+            
+            status = "unknown"
+            owner_info = None
+            if plate_record:
+                status = "blocked" if plate_record["status"] == "blocked" else "allowed"
+                if status == "allowed":
+                    # Trigger door open in a non-blocking way
+                    asyncio.create_task(trigger_door_open(camera_id))
+                owner_info = { "owner_name": plate_record["owner_name"], "apartment": f"{plate_record['block_name']} - {plate_record['apartment_number']}" }
+
+            # Draw bbox on frame for the saved image
+            bbox = detection_result["bbox"]
+            color_map = {"allowed": (0, 255, 0), "blocked": (0, 0, 255), "unknown": (0, 255, 255)}
+            cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color_map[status], 2)
+            cv2.putText(frame, plate_text, (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_map[status], 2)
+
+            _, buffer = cv2.imencode('.jpg', frame)
+            img_base64 = base64.b64encode(buffer).decode('utf-8')
+
+            detection = Detection(
+                camera_id=camera_id, plate=plate_text, status=status,
+                confidence=confidence, image_base64=img_base64, owner_info=owner_info
+            )
+            
+            await db.detections.insert_one(detection.model_dump())
+            detection_buffer.append(detection.model_dump())
+            
+            for ws_client in websocket_clients:
+                await ws_client.send_json({"type": "detection", "data": detection.model_dump()})
+        except Exception as e:
+            logger.error(f"Result broadcaster error: {e}")
+
+async def trigger_door_open(camera_id: str):
+    """Finds the associated door and opens it."""
+    try:
+        camera_info = await db.cameras.find_one({"id": camera_id}, {"_id": 0})
+        if camera_info and camera_info.get("door_id"):
+            door_info = await db.doors.find_one({"id": camera_info["door_id"]}, {"_id": 0})
+            if door_info:
+                # Use an async HTTP client for non-blocking requests
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    await client.get(f"http://{door_info['ip']}{door_info['endpoint']}", timeout=2.0)
+    except Exception as e:
+        logger.error(f"Failed to trigger door for camera {camera_id}: {e}")
 
 # ==================== API ROUTES ====================
 
@@ -585,46 +537,60 @@ async def delete_camera(camera_id: str):
 
 @api_router.post("/cameras/{camera_id}/start")
 async def start_camera(camera_id: str):
+    if camera_id in active_cameras:
+        return {"message": "Camera already running"}
+
     camera = await db.cameras.find_one({"id": camera_id}, {"_id": 0})
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
+
+    active_cameras[camera_id] = camera['id']
+    frame_queues[camera_id] = asyncio.Queue(maxsize=10)
+
+    asyncio.create_task(camera_reader(
+        camera_id=camera_id,
+        camera_url=camera["url"],
+        camera_type=camera["type"],
+        fps=camera.get("fps", 15)
+    ))
+    asyncio.create_task(plate_processor(camera_id=camera_id))
     
-    if camera_id in active_cameras:
-        return {"message": "Camera already running"}
-    
-    active_cameras[camera_id] = {
-        "name": camera["name"],
-        "type": camera["type"],
-        "url": camera["url"],
-        "fps": camera.get("fps", 15),
-        "latest_frame": None,
-        "status": "starting"
-    }
-    
-    asyncio.create_task(process_camera_stream(camera_id, active_cameras[camera_id]))
+    logger.info(f"Started processing for camera {camera_id}")
     return {"message": "Camera started"}
 
 @api_router.post("/cameras/{camera_id}/stop")
 async def stop_camera(camera_id: str):
     if camera_id in active_cameras:
         del active_cameras[camera_id]
+        # The tasks will see this and exit gracefully
+        if camera_id in frame_queues:
+            del frame_queues[camera_id]
+        logger.info(f"Stopped processing for camera {camera_id}")
     return {"message": "Camera stopped"}
 
 @api_router.get("/cameras/{camera_id}/stream")
 async def get_camera_stream(camera_id: str):
-    if camera_id not in active_cameras:
-        raise HTTPException(status_code=404, detail="Camera not active")
-    
-    def generate():
-        while camera_id in active_cameras:
-            frame = active_cameras[camera_id].get("latest_frame")
-            if frame:
+    if camera_id not in frame_queues:
+        raise HTTPException(status_code=404, detail="Camera not active or not streaming.")
+
+    async def generate():
+        q = frame_queues[camera_id]
+        while True:
+            try:
+                # Get a frame from the queue, with a timeout to prevent indefinite blocking
+                frame = await asyncio.wait_for(q.get(), timeout=10.0)
+
+                # Encode the frame as JPEG
+                _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
                 yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            else:
-                import time
-                time.sleep(0.1)
-    
+                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+            except asyncio.TimeoutError:
+                logger.warning(f"No frame received for camera {camera_id} in 10s. Stopping stream.")
+                break
+            except Exception as e:
+                logger.error(f"Error in camera stream generator for {camera_id}: {e}")
+                break
+
     return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
 
 # Detections
